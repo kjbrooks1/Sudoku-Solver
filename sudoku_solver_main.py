@@ -5,20 +5,60 @@ import random
 
 
 class SudokuGUI:
-
+    
+    
 
     def __init__(self, root):
+        #instance vars
         self.root = root #Tk Window
+        self.solutionGrid = {}
+        self.pen = ""
+
         root.geometry("600x700") #set width x height
         root.configure(bg="white")
 
         #make header
-        self.header_frame = tk.Frame()
+        self.header_frame = tk.Frame(root)
         self.title_label = tk.Label(self.header_frame, text="Sudoku Solver", bg="white")
         self.title_label.config(font=("Consolas",30))
         self.title_label.pack()
         self.header_frame.pack(pady=30)
 
+        #create selection bar w/1-9 options
+        self.selectionBar_frame = tk.Frame(root)
+        
+        boxOne = tk.Label(self.selectionBar_frame, text="1", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxTwo = tk.Label(self.selectionBar_frame, text="2", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxThree = tk.Label(self.selectionBar_frame, text="3", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxFour = tk.Label(self.selectionBar_frame, text="4", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxFive = tk.Label(self.selectionBar_frame, text="5", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxSix = tk.Label(self.selectionBar_frame, text="6", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxSeven = tk.Label(self.selectionBar_frame, text="7", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxEight = tk.Label(self.selectionBar_frame, text="8", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxNine = tk.Label(self.selectionBar_frame, text="9", bg="#e6e6e6", borderwidth=2, relief="groove", width=4, height=2)
+        boxOne.grid(row=0, column=0)
+        boxTwo.grid(row=0, column=1)
+        boxThree.grid(row=0, column=2)
+        boxFour.grid(row=0, column=3)
+        boxFive.grid(row=0, column=4)
+        boxSix.grid(row=0, column=5)
+        boxSeven.grid(row=0, column=6)
+        boxEight.grid(row=0, column=7)
+        boxNine.grid(row=0, column=8)
+        selectionBar = [boxOne, boxTwo, boxThree, boxFour, boxFive, boxSix, boxSeven, boxEight, boxNine]
+
+        boxOne.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxOne, selectionBar))
+        boxTwo.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxTwo, selectionBar))
+        boxThree.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxThree, selectionBar))
+        boxFour.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxFour, selectionBar))
+        boxFive.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxFive, selectionBar))
+        boxSix.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxSix, selectionBar))
+        boxSeven.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxSeven, selectionBar))
+        boxEight.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxEight, selectionBar))
+        boxNine.bind("<Button-1>", lambda box_label: self.clickedSelectionBar(boxNine, selectionBar))
+
+        self.selectionBar_frame.pack(padx=5)
+        
         #create a blank 9x9 grid
         self.frame = tk.Frame()
         boxes = {}
@@ -35,8 +75,8 @@ class SudokuGUI:
                 boxes[(row, col)] = self.box #this way can edit each box later
         self.frame.pack(padx=5, pady=50)
 
-        #fill the board with starting numbers
-        self.fill_button = tk.Button(root, text="Fill",command= lambda: self.fillGrid(boxes), highlightbackground="white")
+        #Add Buttons
+        self.fill_button = tk.Button(root, text="Fill",command= lambda: self.fillSolutionGrid(boxes), highlightbackground="white")
         self.fill_button.pack()
         self.solve_button = tk.Button(root, text="Solve",command=self.solve, highlightbackground="white")
         self.solve_button.pack()
@@ -44,7 +84,7 @@ class SudokuGUI:
         self.clear_button.pack()
 
     #fill board
-    def fillGrid(self, grid={}):
+    def fillSolutionGrid(self, grid={}):
         self.emptyGrid(grid) #remove anything already there
         
         #create another dictionary with options num
@@ -76,9 +116,8 @@ class SudokuGUI:
             #randomly select from this array and give value of smallest item in options
             if(len(smallest_options) == 0):
                 if(self.isFull(grid) is False):
-                    print("not full")
                     self.emptyGrid(grid)
-                    self.fillGrid(grid)
+                    self.fillSolutionGrid(grid)
                     break
             random_box = random.choice(smallest_options)
             at_row = random_box[0]
@@ -86,12 +125,14 @@ class SudokuGUI:
             new_value = options[random_box[0],random_box[1]][0]
             grid[(at_row,at_col)].configure(text=new_value)
             self.removeOptions(new_value, at_row, at_col, options)
-          
+        self.solutionGrid = grid
+
     #to remove numbers:
         #pick a random number you haven't tried removing
         #remove the number, run your solver with the added condition that is cannot use the removed number here
         #if the solver finds a solution, you can't remove the number
         #repeat until you have enough removed numbers (or you can't remove any more)
+
     def isValid(self, number, row, col, grid={}):
         #check row + col
         for x in range(9):
@@ -269,6 +310,27 @@ class SudokuGUI:
         for row in range(9):
             for col in range(9):
                 grid[(row,col)].configure(text="")
+
+    # ---------------------- EVENT HANDLER METHODS ---------------------- #
+    def clickedSelectionBar(self, label, selectionBar):
+        #FFEB89 == yellow
+        anotherSelected = False
+        for element in selectionBar:
+            #print(element.cget("bg"))
+            if(element == label):
+                pass
+            elif(element.cget("bg") == "#FFEB89"):
+                anotherSelected = True
+        if(anotherSelected == False):
+            if(label.cget("bg") == "#FFEB89"):
+                label.configure(bg="#e6e6e6")
+                self.pen = ""
+            else:
+                label.configure(bg="#FFEB89")
+                self.pen = label.cget("text")            
+    
+
+
 
 if __name__ == "__main__":
     root = tk.Tk(className="sudoku solver")
