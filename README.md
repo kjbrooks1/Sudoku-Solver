@@ -1,4 +1,4 @@
-# Sudoku Solver
+# Sudoku Solver: Personal Project
 
 A Sudoku Solver in python using Tkinter! This program is ment to generate blank puzzles, give users the chance to solve on their own, check their work, and run a solution alogrithm. 
 
