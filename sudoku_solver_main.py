@@ -5,6 +5,8 @@ import random
 
 
 class SudokuGUI:
+
+
     def __init__(self, root):
         self.root = root #Tk Window
         root.geometry("600x700") #set width x height
@@ -34,13 +36,12 @@ class SudokuGUI:
         self.frame.pack(padx=5, pady=50)
 
         #fill the board with starting numbers
-        self.easy_fill_button = tk.Button(root, text="Fill",command= lambda: self.fillGrid(boxes), highlightbackground="white")
-        self.easy_fill_button.pack()
-
-        #create buttons
+        self.fill_button = tk.Button(root, text="Fill",command= lambda: self.fillGrid(boxes), highlightbackground="white")
+        self.fill_button.pack()
         self.solve_button = tk.Button(root, text="Solve",command=self.solve, highlightbackground="white")
         self.solve_button.pack()
-    
+        self.clear_button = tk.Button(root, text="Clear",command=lambda: self.emptyGrid(boxes), highlightbackground="white")
+        self.clear_button.pack()
 
     #fill board
     def fillGrid(self, grid={}):
@@ -74,19 +75,17 @@ class SudokuGUI:
                         smallest_options += [(row,col)]
             #randomly select from this array and give value of smallest item in options
             if(len(smallest_options) == 0):
-                print("yikes")
-                #where we would need to backtrack
-                break
+                if(self.isFull(grid) is False):
+                    print("not full")
+                    self.emptyGrid(grid)
+                    self.fillGrid(grid)
+                    break
             random_box = random.choice(smallest_options)
-            #check is box position is valid
             at_row = random_box[0]
             at_col = random_box[1]
             new_value = options[random_box[0],random_box[1]][0]
             grid[(at_row,at_col)].configure(text=new_value)
-            #remove appropraite options
             self.removeOptions(new_value, at_row, at_col, options)
-        #might find spot where can no longer make viable grid
-        #unwind to where there are options left
           
     #to remove numbers:
         #pick a random number you haven't tried removing
@@ -181,7 +180,7 @@ class SudokuGUI:
     def isFull(self, grid={}):
         for row in range(9):
             for col in range(9):
-                if(grid[(row,col)].cget("text") != ""):
+                if(grid[(row,col)].cget("text").strip() == ""):
                     return False
         return True
 
@@ -271,7 +270,7 @@ class SudokuGUI:
             for col in range(9):
                 grid[(row,col)].configure(text="")
 
-root = tk.Tk(className="sudoku solver")
-my_gui = SudokuGUI(root)
-#open the window and start operations
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk(className="sudoku solver")
+    my_gui = SudokuGUI(root)
+    root.mainloop()
