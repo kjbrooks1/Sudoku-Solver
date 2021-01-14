@@ -12,10 +12,11 @@ GUI_GRID = {}
 SOLUTION_GRID = {}
 SELECTION_BAR_TEXT = []
 SELECTION_BAR_RECTANGLES = []
-PEN = ""
+
 
 class SudokuGUI:
-
+    PEN = ""
+    
     def __init__(self, root):
         self.root = root
         self.main_frame = tk.Frame(self.root, bg="white")
@@ -24,21 +25,21 @@ class SudokuGUI:
         self.canvas = Canvas(self.main_frame, bg="white", width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill=BOTH, expand=1)
         
-        self.__draw_selectionBar()
         self.__draw_grid()
+        self.__draw_selectionBar()
+
         #generate SOLUTION_GRID
         #self.fillSolutionGrid()
         #update grid we want to show user at start (GUI_GRID)
-        '''
         for row in range(9):
             for col in range(9):
-                GUI_GRID[(row,col)] = SOLUTION_GRID[(row,col)]
-        '''
+                GUI_GRID[(row,col)] = ""
+        
         #draw the numbers in the grid
-        #self.__draw_puzzle()
+        self.__draw_puzzle()
 
         #buttons
-        clear_button = tk.Button(self.main_frame, text="Clear", command=self.__clear_answers(), highlightbackground="white")
+        clear_button = tk.Button(self.main_frame, text="Clear", command=self.__emptyGrid(), highlightbackground="white")
         clear_button.pack(fill=BOTH, side=BOTTOM)
 
         #binding
@@ -51,7 +52,8 @@ class SudokuGUI:
         self.canvas.tag_bind(SELECTION_BAR_RECTANGLES[6], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(6))   
         self.canvas.tag_bind(SELECTION_BAR_RECTANGLES[7], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(7))   
         self.canvas.tag_bind(SELECTION_BAR_RECTANGLES[8], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(8))   
-        #self.canvas.bind("<Button-1>", self.__cell_clicked)
+        
+        self.canvas.tag_bind("grid", "<Button-1>", self.__cell_clicked)
         #self.canvas.bind("<Key>", self.__key_pressed)
 
     def __draw_grid(self):
@@ -67,42 +69,41 @@ class SudokuGUI:
                     color = "light grey"
 
                 x0 = row*SIDE + MARGIN 
-                y0 = col*SIDE + MARGIN + 75
+                y0 = col*SIDE + MARGIN
                 x1 = (row+1)*SIDE + MARGIN 
-                y1 = (col+1)*SIDE + MARGIN + 75
-                self.canvas.create_rectangle(x0, y0, x1, y1, fill=color)
+                y1 = (col+1)*SIDE + MARGIN
+                self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, tag="grid")
 
     def __draw_selectionBar(self):
         for row in range(9):
-            x0 = row*SIDE + MARGIN
-            y0 = 0*SIDE + MARGIN
-            x1 = (row+1)*SIDE + MARGIN
-            y1 = (1)*SIDE + MARGIN
+            x0 = row*SIDE + MARGIN 
+            y0 = 0*SIDE + MARGIN + 490
+            x1 = (row+1)*SIDE + MARGIN 
+            y1 = (1)*SIDE + MARGIN + 490
             rectobj = self.canvas.create_rectangle(x0, y0, x1, y1, fill="white")
             SELECTION_BAR_RECTANGLES.append(rectobj)
             #add text
-            x = row*SIDE + MARGIN + SIDE / 2
-            y = 0*SIDE + MARGIN + SIDE / 2
+            x = row*SIDE + MARGIN + SIDE / 2 
+            y = 0*SIDE + MARGIN + SIDE / 2 + 490
             tag = str(row) + "selectionBar"
             textobj = self.canvas.create_text(x, y, text=row+1, tags=tag)
             SELECTION_BAR_TEXT.append(textobj)
             
     def __draw_puzzle(self):
-        self.canvas.delete("numbers")
+        #self.canvas.delete("numbers")
         for row in range(9):
             for col in range(9):
-                to_fill = SOLUTION_GRID[(row, col)]
+                to_fill = GUI_GRID[(row, col)]
                 x = row*SIDE + MARGIN + SIDE / 2
                 y = col*SIDE + MARGIN + SIDE / 2
                 self.canvas.create_text(x, y, text=to_fill, tags="numbers")
 
-    #TO BUILD
-    def __clear_answers(self):
-        pass
-    def __cell_clicked(self):
-        pass
-    def __key_pressed(self):
-        pass
+    def __cell_clicked(self, event):
+        x, y = event.x, event.y
+        # get row and col numbers from x,y coordinates
+        col, row = (y - MARGIN) / SIDE, (x - MARGIN) / SIDE
+        GUI_GRID[(int(row), int(col))] = self.PEN
+        self.__draw_puzzle()
 
     #fill board
     def fillSolutionGrid(self):
@@ -326,12 +327,15 @@ class SudokuGUI:
         print("solved!")
 
     #delete all numbers from 9x9 grid
-    def emptyGrid(self, grid = {}):
+    def __emptyGrid(self):
         for row in range(9):
             for col in range(9):
-                grid[(row,col)] = ""
+                GUI_GRID[(row,col)] = ""
+        self.__draw_puzzle()
 
     # ---------------------- EVENT HANDLER METHODS ---------------------- #
+    
+
     def __clickedSelectionBar(self, num):
         #FFEB89 == light yellow
         anotherSelected = False
@@ -344,10 +348,9 @@ class SudokuGUI:
             if(self.canvas.itemcget(SELECTION_BAR_RECTANGLES[num], "fill") == "#FFEB89"):
                 self.canvas.itemconfig(SELECTION_BAR_RECTANGLES[num], fill="white")
                 self.PEN = ""
-            else:
+            else:                
                 self.canvas.itemconfig(SELECTION_BAR_RECTANGLES[num], fill="#FFEB89")
-                self.PEN = self.canvas.itemcget(SELECTION_BAR_TEXT[num], "text")  
-    
+                self.PEN = self.canvas.itemcget(SELECTION_BAR_TEXT[num], "text")
 
 
 if __name__ == "__main__":
