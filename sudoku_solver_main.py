@@ -1,9 +1,17 @@
 #Sudoku Solver
 import tkinter as tk
-from tkinter import Canvas, BOTH, BOTTOM
+from tkinter import Canvas, RIGHT, Y, LEFT
+import tkinter.font as tkFont
 from random import randrange
 import random
 
+'''
+Things I want to add:
+- dark/light mode switch
+- pen vs. pencil functionality
+- clear only user added nums
+- clear only solver's added nums
+'''
 
 
 class SudokuGUI:
@@ -13,7 +21,7 @@ class SudokuGUI:
     MARGIN = 50
     SIDE = 50
     WIDTH = MARGIN * 2 + SIDE  * 9
-    HEIGHT = WIDTH + 100
+    HEIGHT = MARGIN * 2 + SIDE  * 9 + 100
     SOLUTION_GRID = {}
     SELECTION_BAR_TEXT = []
     SELECTION_BAR_RECTANGLES = []
@@ -23,7 +31,7 @@ class SudokuGUI:
         self.root = root
 
         self.canvas = Canvas(self.root, bg="white", width=self.WIDTH, height=self.HEIGHT)
-        self.canvas.pack(fill=BOTH, expand=1)
+        self.canvas.pack(fill=Y, side=RIGHT, expand=1)
         
         self.__draw_grid()
         self.__draw_selectionBar()
@@ -32,7 +40,7 @@ class SudokuGUI:
         #self.fillSolutionGrid()
 
         #update grid we want to show user at start (CURRENT_GRID)
-        testing_grid = [
+        default_grid = [
             [" ", " ", " ", "2", "6", " ", "7", " ", "1"],
             ["6", "8", " ", " ", "7", " ", " ", "9", " "],
             ["1", "9", " ", " ", " ", "4", "5", " ", " "],
@@ -45,16 +53,23 @@ class SudokuGUI:
 
         for row in range(9):
             for col in range(9):
-                self.CURRENT_GRID[(row,col)] = testing_grid[row][col]
+                self.CURRENT_GRID[(row,col)] = default_grid[row][col]
         
         #draw the numbers in the grid
         self.__draw_puzzle()
 
         #buttons
-        clear_button = tk.Button(self.root, text="Clear", command=lambda: self.__emptyGrid(), highlightbackground="white")
-        clear_button.pack(fill=BOTH, side=BOTTOM)
-        solver_button = tk.Button(self.root, text="Run Solver", command=lambda: self.__run_solver(0,0), highlightbackground="white")
-        solver_button.pack(fill=BOTH, side=BOTTOM)
+        title_font= tkFont.Font(family="Coda Caption", size=30)
+        title_label = tk.Label(self.root, text="Simple\nSudoku!", height=4, width=10, font=title_font)
+        title_label.pack()
+        clear_button = tk.Button(self.root, text="Clear Everything", height=2, width=10, command=lambda: self.__emptyGrid())
+        clear_button.pack()
+        solver_button = tk.Button(self.root, text="Run Solver", height=2, width=10,command=lambda: self.__run_solver(0,0))
+        solver_button.pack()
+        #pen_button = tk.Button(self.root, text="pen")
+        #pen_button.pack(side=LEFT)
+        #pencil_button = tk.Button(self.root, text="pencil")
+        #pencil_button.pack(side=RIGHT)
 
         #binding
         self.canvas.tag_bind(self.SELECTION_BAR_RECTANGLES[0], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(0))   
@@ -75,9 +90,8 @@ class SudokuGUI:
         self.canvas.tag_bind(self.SELECTION_BAR_TEXT[6], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(6))   
         self.canvas.tag_bind(self.SELECTION_BAR_TEXT[7], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(7))   
         self.canvas.tag_bind(self.SELECTION_BAR_TEXT[8], '<ButtonPress-1>', lambda x: self.__clickedSelectionBar(8))  
-        
-        self.canvas.tag_bind("grid", "<Button-1>", self.__cell_clicked)
         #add function so key nums change selection bar
+        self.canvas.tag_bind("grid", "<Button-1>", self.__cell_clicked)
         
     def __draw_grid(self):
         for row in range(9):
