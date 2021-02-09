@@ -4,7 +4,7 @@
 import tkinter as tk
 from tkinter import Canvas, RIGHT, Y, LEFT
 import tkinter.font as tkFont
-from random import randrange
+from random import randint, randrange
 import random
 
 '''
@@ -29,8 +29,9 @@ class SudokuGUI:
     HEIGHT = MARGIN * 2 + SIDE  * 9 + 100
     
     #grid vars
-    CURRENT_GRID = {}
-    SOLUTION_GRID = {}
+    GRID = {}
+    #SOLUTION_GRID = {}
+    #CURRENT_GRID
 
     #other
     SELECTION_BAR_TEXT = []
@@ -46,8 +47,11 @@ class SudokuGUI:
         #fill both grids with empty spaces
         for row in range(9):
             for col in range(9):
-                self.CURRENT_GRID[(row,col)] = " "
-                self.SOLUTION_GRID[(row,col)] = " "
+                self.GRID[(row,col)] = " "
+
+        self.__draw_grid()
+        self.__draw_selectionBar()
+        self.__draw_puzzle()
 
         #generate SOLUTION_GRID
         self.__createSolutionGrid()
@@ -55,6 +59,7 @@ class SudokuGUI:
         #use solution grid to make current grid (shows only starting nums)
         self.__createStarterGrid()
 
+        self.__draw_puzzle()
         '''
         When running the solver, it will solve the grid that is sometimes different from the solution_grid
         which means that __createStarterGrid() isn't returning only unique solutions!!!
@@ -72,11 +77,7 @@ class SudokuGUI:
             [" ", "4", " ", " ", "5", " ", " ", "3", "6"],
             ["7", " ", "3", " ", "1", "8", " ", " ", " "]    ]
         '''
-
-        #draw onto GUI
-        self.__draw_grid()
-        self.__draw_selectionBar()
-        self.__draw_puzzle()
+        
 
         #buttons
         title_font= tkFont.Font(family="Coda Caption", size=30)
@@ -153,14 +154,14 @@ class SudokuGUI:
         #self.canvas.delete("numbers")
         for row in range(9):
             for col in range(9):
-                to_fill = self.CURRENT_GRID[(row,col)]
+                to_fill = self.GRID[(row,col)]
                 x = col*self.SIDE + self.MARGIN + self.SIDE / 2
                 y = row*self.SIDE + self.MARGIN + self.SIDE / 2
                 box = self.canvas.create_text(x, y, text=to_fill, tags="grid")
                 self.USER_VISIBLE_TEXT_OBJECTS[(row, col)] = box
 
     def __update_puzzle(self, row, col, newNum, color):
-        self.CURRENT_GRID[(row, col)] = str(self.PEN)
+        self.GRID[(row, col)] = str(self.PEN)
         self.canvas.itemconfig(self.USER_VISIBLE_TEXT_OBJECTS[(row, col)], text=newNum, fill=color)
 
     def print_current_grid(self, GRID):
@@ -191,8 +192,8 @@ class SudokuGUI:
         row = randrange(9)
         col = randrange(9)
 
-        if(self.CURRENT_GRID[(row,col)].strip() == ""):
-            self.__update_puzzle(row, col, self.SOLUTION_GRID[(row,col)], "purple")
+        if(self.GRID[(row,col)].strip() == ""):
+            self.__update_puzzle(row, col, self.GRID[(row,col)], "purple")
         else:
             self.__get_hint()
 
@@ -236,15 +237,15 @@ class SudokuGUI:
         for num in range(1,10): #try all options until one doesn't break the board
             if(self.isValid(num, masterRow, masterCol)):
                 #true is safe, so fill grid space
-                self.CURRENT_GRID[(masterRow,masterCol)] = str(num)
+                self.GRID[(masterRow,masterCol)] = str(num)
                 self.canvas.itemconfig(self.USER_VISIBLE_TEXT_OBJECTS[(masterRow, masterCol)], text=str(num), fill="green")
 
                 if(self.__run_solver(masterRow, masterCol+1)):
                     return True
 
-                self.CURRENT_GRID[(masterRow,masterCol)] = " "
+                self.GRID[(masterRow,masterCol)] = " "
                 self.canvas.itemconfig(self.USER_VISIBLE_TEXT_OBJECTS[(masterRow, masterCol)], text=" ", fill="green")
-        self.print_current_grid(self.SOLUTION_GRID)
+        #self.print_current_grid(self.SOLUTION_GRID)
         return False
 
     def isValid(self, number, row, col):
@@ -253,12 +254,12 @@ class SudokuGUI:
         for x in range(9):
             if(x == col):
                 pass
-            elif(self.CURRENT_GRID[(row,x)] == number):
+            elif(self.GRID[(row,x)] == number):
                 return False
         for y in range(9):
             if(y == row):
                 pass
-            elif(self.CURRENT_GRID[(y,col)] == number):
+            elif(self.GRID[(y,col)] == number):
                 return False
         #check 3x3 grid
         if(row in (0,3,6) and col in (0,3,6)):
@@ -266,63 +267,63 @@ class SudokuGUI:
                 for j in [0,1,2]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (0,3,6) and col in (1,4,7)):
             for i in [0,1,2]:
                 for j in [-1,0,1]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (0,3,6) and col in (2,5,8)):
             for i in [0,1,2]:
                 for j in [0,-1,-2]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (1,4,7) and col in (0,3,6)):
             for i in [-1,0,1]:
                 for j in [0,1,2]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (1,4,7) and col in (1,4,7)):
             for i in [-1,0,1]:
                 for j in [-1,0,1]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (1,4,7) and col in (2,5,8)):
             for i in [-1,0,1]:
                 for j in [-2,-1,0]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (2,5,8) and col in (0,3,6)):
             for i in [-2,-1,0]:
                 for j in [0,1,2]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (2,5,8) and col in (1,4,7)):
             for i in [-2,-1,0]:
                 for j in [-1,0,1]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         elif(row in (2,5,8) and col in (2,5,8)):
             for i in [-2,-1,0]:
                 for j in [-2,-1,0]:
                     if(i==0 and j==0):
                         pass
-                    elif(self.CURRENT_GRID[(row+i,col+j)] == number):
+                    elif(self.GRID[(row+i,col+j)] == number):
                         return False
         else:
             print("ERROR: invalid square position")
@@ -331,7 +332,7 @@ class SudokuGUI:
     def isFull(self):
         for row in range(9):
             for col in range(9):
-                if(self.CURRENT_GRID[(row,col)].strip() == ""):
+                if(self.GRID[(row,col)].strip() == ""):
                     return False
         return True
 
@@ -411,7 +412,7 @@ class SudokuGUI:
             print("ERROR: invalid square position")
 
     def __createSolutionGrid(self):
-        #self.__emptyGrid() remove anything already there
+        self.__emptyGrid() #remove anything already there
         
         #create another dictionary with options num
         options = {}
@@ -423,7 +424,7 @@ class SudokuGUI:
         row = randrange(9)
         col = randrange(9)
         #put 1 there
-        self.SOLUTION_GRID[(row, col)] = "1"
+        self.GRID[(row, col)] = "1"
         self.removeOptions("1", row, col, options) #delete 1 from invalid places
 
         while(self.isFull() is False):
@@ -441,32 +442,90 @@ class SudokuGUI:
             #randomly select from this array and give value of smallest item in options
             if(len(smallest_options) == 0):
                 if(self.isFull() is False):
-                    #self.__emptyGrid()
-                    #self.__createSolutionGrid()
+                    self.__createSolutionGrid()
                     break
             random_box = random.choice(smallest_options)
             at_row = random_box[0]
             at_col = random_box[1]
             new_value = options[random_box[0],random_box[1]][0]
-            self.SOLUTION_GRID[(at_row,at_col)] = new_value
+            self.GRID[(at_row,at_col)] = new_value
             self.removeOptions(new_value, at_row, at_col, options)
+    
+    def __createStarterGrid(self): #only the first attempt is showing as unique
 
-    def __createStarterGrid(self):
-        cells_not_tried = list(self.SOLUTION_GRID.keys())
-        removed_counter = 0
+        attempts = 28
+        counter = 1
+        while(attempts > 0):
+            #pick a random cell that is not already empty
+            testerRow = randint(0,8)
+            testerCol = randint(0,8)
+            while(self.GRID[(testerRow,testerCol)].strip()==""):
+                testerRow = randint(0,8)
+                testerCol = randint(0,8)
+                break
 
-        while(removed_counter <= 17):
-            #pick a random number you haven't tried removing
-            random_cell = random.choice(cells_not_tried)
-            #remove the number, run your solver with the added condition that is cannot use the removed number here
-            if(self.__check_removal(0,0,self.SOLUTION_GRID[(random_cell[0],random_cell[1])], random_cell[0], random_cell[1] )):
-                #true -> found solution, can't remove the number
-                self.CURRENT_GRID[(random_cell[0], random_cell[1])] = self.SOLUTION_GRID[(random_cell[0],random_cell[1])]
-                #remove from remaining cells to drawn from
-                cells_not_tried.remove(random_cell)
-                removed_counter += 1
-            #repeat until you have enough removed numbers (or you can't remove any more)
+            #remember cell value in case we need to put it back
+            backup = self.GRID[(testerRow,testerCol)]
+            self.GRID[(testerRow,testerCol)] = " "
 
+            #take a copy of the grid
+            copyGrid = {}
+            for row in range(9):
+                for col in range(9):
+                    copyGrid[(row,col)] = self.GRID[(row,col)]
+            
+            counter=0
+            #run solver
+            self.__check_another_Sol(0,0)
+            #check if new grid is the same as the one copies before
+            for row in range(9):
+                for col in range(9):
+                    #they are not the same:
+                    if(copyGrid[(row,col)].strip() == ""):
+                        pass
+                    elif(copyGrid[(row,col)] != self.GRID[(row,col)]):
+                        counter+=1
+                        break
+            #make current grid back to copied grid + put back deleted cell
+            if(counter > 0):
+                for row in range(9):
+                    for col in range(9):
+                        self.GRID[(row,col)] = copyGrid[(row,col)]
+                self.GRID[(testerRow,testerCol)] = backup
+                attempts -= 1
+            else:
+                #reset grid with deleted cells
+                for row in range(9):
+                    for col in range(9):
+                        self.GRID[(row,col)] = copyGrid[(row,col)]
+                attempts -= 1
+
+    def __check_another_Sol(self, masterRow, masterCol):
+        #base case - no more rows or columns
+        if(masterRow == 8 and masterCol == 9):
+            return True
+
+        #end of row, move to next
+        if(masterCol == 9):
+            masterRow += 1
+            masterCol = 0
+
+        current_cell = self.GRID[(masterRow, masterCol)].strip()
+        #if something already there, move on
+        if(current_cell != ""):
+            return self.__check_another_Sol(masterRow, masterCol+1)
+
+        for num in range(1,10): #try all options until one doesn't break the board
+            if(self.isValid(num, masterRow, masterCol)):
+                #true is safe, so fill grid space
+                self.GRID[(masterRow,masterCol)] = str(num)
+
+                if(self.__check_another_Sol(masterRow, masterCol+1)):
+                    return True
+
+                self.GRID[(masterRow,masterCol)] = " "
+        return False
+        
 
     def __check_removal(self, masterRow, masterCol, conditionNum, conditionRow, conditionCol): #w/backtracking, recursion
         #base case - no more rows or columns
@@ -478,7 +537,7 @@ class SudokuGUI:
             masterRow += 1
             masterCol = 0
 
-        current_cell = self.SOLUTION_GRID[(masterRow, masterCol)]
+        current_cell = self.GRID[(masterRow, masterCol)]
         #if something already there, move on
         if(current_cell != ""):
             return self.__check_removal(masterRow, masterCol+1, conditionNum, conditionRow, conditionCol)
@@ -488,12 +547,12 @@ class SudokuGUI:
                     pass
             elif(self.isValid(num, masterRow, masterCol)):
                 #true is safe, so fill grid space
-                self.CURRENT_GRID[(masterRow,masterCol)] = str(num)
+                self.GRID[(masterRow,masterCol)] = str(num)
 
                 if(self.__check_removal(masterRow, masterCol+1, conditionNum, conditionRow, conditionCol)):
                     return True
 
-                self.CURRENT_GRID[(masterRow,masterCol)] = " "
+                self.GRID[(masterRow,masterCol)] = " "
         return False
 
 if __name__ == "__main__":
